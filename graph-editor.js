@@ -402,5 +402,8 @@ window.onload = function()
         d3.event.stopPropagation();
     } );
 
-    draw();
+    setTimeout(function() {
+      graphModel = parseMarkup( localStorage.getItem( "graph-diagram-markup" ) );
+      draw();
+    }, 0);
 };
