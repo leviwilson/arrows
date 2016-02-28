@@ -1,18 +1,27 @@
 window.onload = function()
 {
-    var graphModel;
-    if ( !localStorage.getItem( "graph-diagram-markup" ) )
-    {
-        graphModel = gd.model();
-        graphModel.createNode().x( 0 ).y( 0 );
-        save( formatMarkup() );
-    }
-    if ( localStorage.getItem( "graph-diagram-style" ) )
-    {
-        d3.select( "link.graph-style" )
-            .attr( "href", localStorage.getItem( "graph-diagram-style" ) );
-    }
-    graphModel = parseMarkup( localStorage.getItem( "graph-diagram-markup" ) );
+    var graphModel,
+        settings = {
+          markup: {
+            name: 'graph-diagram-markup',
+            default: '<ul class="graph-diagram-markup" data-internal-scale="1" data-external-scale="1">\n' +
+                     '  <li class="node" data-node-id="0" data-x="0" data-y="0"></li>\n' +
+                     '</ul>'
+          },
+          style: {
+            name: 'graph-diagram-style',
+            default: 'style/graph-style-chunky.css'
+          },
+          internalScale: {
+            name: 'internalScale', default: 1.0
+          }
+        };
+
+    d3.select( "link.graph-style" )
+      .attr( "href", valueOrDefault(settings.style));
+
+    graphModel = parseMarkup(valueOrDefault(settings.markup));
+    graphModel.internalScale(valueOrDefault(settings.internalScale));
 
     var svg = d3.select("#canvas")
         .append("svg:svg")
@@ -331,6 +340,10 @@ window.onload = function()
             .on( "click", cancelModal );
     }
 
+    function valueOrDefault(setting) {
+      return localStorage.getItem(setting.name) || setting.default;
+    }
+
     var exportMarkup = function ()
     {
         appendModalBackdrop();
@@ -380,14 +393,17 @@ window.onload = function()
         d3.select("link.graph-style")
             .attr("href", "style/" + selectedStyle);
 
-        graphModel = parseMarkup( localStorage.getItem( "graph-diagram-markup" ) );
+        graphModel = parseMarkup(valueOrDefault(settings.markup));
         save(formatMarkup());
         draw();
         cancelModal();
     });
 
     function changeInternalScale() {
-        graphModel.internalScale(d3.select("#internalScale").node().value);
+        var internalScale = d3.select("#internalScale").node().value;
+        localStorage.setItem('internalScale', internalScale);
+
+        graphModel.internalScale(internalScale);
         draw();
     }
     d3.select("#internalScale").node().value = graphModel.internalScale();
@@ -403,7 +419,7 @@ window.onload = function()
     } );
 
     setTimeout(function() {
-      graphModel = parseMarkup( localStorage.getItem( "graph-diagram-markup" ) );
-      draw();
+      graphModel = parseMarkup(valueOrDefault(settings.markup));
+      changeInternalScale();
     }, 0);
 };
