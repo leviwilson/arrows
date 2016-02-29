@@ -17,11 +17,11 @@ window.onload = function()
           }
         };
 
-    d3.select( "link.graph-style" )
-      .attr( "href", valueOrDefault(settings.style));
-
+    d3.select('link.graph-style').attr('href', valueOrDefault(settings.style));
+    d3.select('#internalScale').node().value = valueOrDefault(settings.internalScale);
+    d3.select('input[name=styleChoice][value="' + valueOrDefault(settings.style).match(/style\/(.*)/)[1] + '"]')
+      .property('checked', true);
     graphModel = parseMarkup(valueOrDefault(settings.markup));
-    graphModel.internalScale(valueOrDefault(settings.internalScale));
 
     var svg = d3.select("#canvas")
         .append("svg:svg")
@@ -105,8 +105,9 @@ window.onload = function()
 
     function save( markup )
     {
-        localStorage.setItem( "graph-diagram-markup", markup );
-        localStorage.setItem( "graph-diagram-style", d3.select( "link.graph-style" ).attr( "href" ) );
+      saveSetting(settings.markup, markup);
+      saveSetting(settings.style, d3.select('link.graph-style').attr('href'));
+      saveSetting(settings.internalScale, d3.select('#internalScale').node().value);
     }
 
     var newNode = null;
@@ -344,6 +345,10 @@ window.onload = function()
       return localStorage.getItem(setting.name) || setting.default;
     }
 
+    function saveSetting(setting, value) {
+      localStorage.setItem(setting.name, value);
+    }
+
     var exportMarkup = function ()
     {
         appendModalBackdrop();
@@ -400,13 +405,12 @@ window.onload = function()
     });
 
     function changeInternalScale() {
-        var internalScale = d3.select("#internalScale").node().value;
-        localStorage.setItem('internalScale', internalScale);
+      var internalScale = d3.select('#internalScale').node().value;
+      saveSetting(settings.internalScale, internalScale);
 
-        graphModel.internalScale(internalScale);
-        draw();
+      graphModel.internalScale(internalScale);
+      draw();
     }
-    d3.select("#internalScale").node().value = graphModel.internalScale();
 
     d3.select(window).on("resize", draw);
     d3.select("#internalScale" ).on("change", changeInternalScale);
